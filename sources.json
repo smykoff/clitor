@@ -1,0 +1,15 @@
+{
+  "version": "0.0.0",
+  "x86_64-linux": {
+    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-linux-amd64.tar.gz",
+    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  },
+  "aarch64-linux": {
+    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-linux-arm64.tar.gz",
+    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  },
+  "aarch64-darwin": {
+    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-darwin-arm64.tar.gz",
+    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  }
+}

@@ -1,1 +1,5 @@
 /clitor
+/result
+/dist
+.idea
+.direnv

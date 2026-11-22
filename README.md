@@ -14,6 +14,37 @@
 just build
 ```
 
+## Установка через Nix
+
+```sh
+nix build          # ./result/bin/clitor
+nix run . -- -list
+nix profile install .#clitor
+```
+
+Или через overlay:
+
+```nix
+{
+  inputs.clitor.url = "github:smykoff/clitor";
+  # ...
+}
+```
+
+```nix
+{
+  nixpkgs.overlays = [ inputs.clitor.overlays.default ];
+}
+```
+
+| Система | tested |
+|---|---|
+| `x86_64-linux` | ✅ |
+| `aarch64-linux` | — |
+| `aarch64-darwin` | — |
+
+Обновить версию вручную (CI делает это сам): `bash scripts/update.sh`.
+
 ## Использование
 
 ```sh
