@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия релиза (например, 1.2.3 или v1.2.3)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "Неотформатированные файлы:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./...
+
+      - name: Build binaries
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          while read -r goos goarch; do
+            out="dist/clitor-${goos}-${goarch}"
+            mkdir -p "$out"
+            CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
+              go build -trimpath -buildvcs=false -ldflags="-s -w" -o "$out/clitor" .
+          done <<'TARGETS'
+          linux amd64
+          linux arm64
+          darwin arm64
+          TARGETS
+          for dir in dist/clitor-*/; do
+            name="$(basename "$dir")"
+            tar -C "$dir" -czf "dist/${name}.tar.gz" clitor
+          done
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-tarballs
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: release-tarballs
+          path: dist
+
+      - name: Determine tag
+        id: meta
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${VERSION_INPUT#v}"
+          if [[ -z "$version" ]]; then
+            echo "::error::Не задан номер версии" >&2
+            exit 1
+          fi
+          if [[ ! "$version" =~ ^[0-9A-Za-z._-]+$ ]]; then
+            echo "::error::Недопустимый номер версии: $version" >&2
+            exit 1
+          fi
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.tag }}
+          files: dist/*.tar.gz
+          generate_release_notes: true
+
+      - name: Update sources.json
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          declare -A files=(
+            [x86_64-linux]="clitor-linux-amd64.tar.gz"
+            [aarch64-linux]="clitor-linux-arm64.tar.gz"
+            [aarch64-darwin]="clitor-darwin-arm64.tar.gz"
+          )
+
+          json=$(jq -n --arg v "${TAG#v}" '{version: $v}')
+          for sys in "${!files[@]}"; do
+            file="dist/${files[$sys]}"
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${files[$sys]}"
+            hash="sha256-$(openssl dgst -sha256 -binary "$file" | base64 -w0)"
+            json=$(jq --arg s "$sys" --arg u "$url" --arg h "$hash" \
+              '.[$s] = {url: $u, hash: $h}' <<<"$json")
+          done
+          jq . <<<"$json" > sources.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sources.json
+          if git diff --cached --quiet; then
+            echo "sources.json is up to date"
+            exit 0
+          fi
+          git commit -m "chore(sources): update to ${TAG} [skip ci]"
+          git push
