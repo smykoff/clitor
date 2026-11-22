@@ -1,0 +1,5 @@
+users:
+  bill:
+    name: bill
+    email: bill@gates.ru
+    key: id_bill
