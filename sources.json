@@ -1,15 +1,15 @@
 {
-  "version": "0.0.0",
-  "x86_64-linux": {
-    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-linux-amd64.tar.gz",
-    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-  },
+  "version": "1.0.0",
   "aarch64-linux": {
-    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-linux-arm64.tar.gz",
-    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    "url": "https://github.com/smykoff/clitor/releases/download/v1.0.0/clitor-linux-arm64.tar.gz",
+    "hash": "sha256-gIxfn8iDkz0MGEHDhKOb/s+BhXuLCzH/6TmqHjchVmQ="
+  },
+  "x86_64-linux": {
+    "url": "https://github.com/smykoff/clitor/releases/download/v1.0.0/clitor-linux-amd64.tar.gz",
+    "hash": "sha256-2wBaY1On3dvycR/ce3BduqTN+tPPGmNm8/c7fyLHGxg="
   },
   "aarch64-darwin": {
-    "url": "https://github.com/smykoff/clitor/releases/download/v0.0.0/clitor-darwin-arm64.tar.gz",
-    "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    "url": "https://github.com/smykoff/clitor/releases/download/v1.0.0/clitor-darwin-arm64.tar.gz",
+    "hash": "sha256-lB8tKjn4U9uqCM6d37kpBDBmmylDGscwBEvctaEsixc="
   }
 }
